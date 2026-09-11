@@ -70,6 +70,10 @@ function observe() {
     for (const m of mutations) {
       for (const node of m.addedNodes) {
         if (node.nodeType !== 1) continue;
+        // The added node may itself be an order card (e.g. AliExpress appending
+        // more orders as direct siblings on "View orders"), which the descendant
+        // scan below would miss.
+        if (activeAdapter.isCard && activeAdapter.isCard(node)) injectCard(node);
         // Re-scan any added subtree through the active adapter's findCards so
         // dynamically rendered cards get buttons regardless of store markup.
         if (node.querySelectorAll) injectAll(node);

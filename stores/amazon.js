@@ -45,6 +45,18 @@ export const amazonAdapter = {
     return Array.from(cards);
   },
 
+  // True when the node is itself an order item (e.g. one appended directly by
+  // dynamic loading), which findCards' querySelectorAll would not match. Mirrors
+  // the two layouts handled in findCards.
+  isCard(node) {
+    if (!node || !node.matches) return false;
+    if (node.matches('.order-card .a-fixed-left-grid.item-box')) return true;
+    return (
+      node.matches('.a-fixed-left-grid') &&
+      Boolean(node.querySelector('[data-component="itemTitle"]'))
+    );
+  },
+
   getButtonMount(card) {
     return (
       card.querySelector('.yohtmlc-item-level-connections') ||

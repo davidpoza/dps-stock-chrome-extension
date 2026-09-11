@@ -24,6 +24,13 @@ export const aliexpressAdapter = {
     return Array.from(root.querySelectorAll('.order-item'));
   },
 
+  // True when the node is itself an order card (e.g. one appended directly as a
+  // sibling when "View orders" loads more), which findCards' querySelectorAll
+  // would not match.
+  isCard(node) {
+    return Boolean(node && node.matches && node.matches('.order-item'));
+  },
+
   getButtonMount(card) {
     return (
       card.querySelector('.order-item-btns') ||
