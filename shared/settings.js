@@ -38,7 +38,9 @@ export function normalizeBaseUrl(url) {
 export function originPatternFor(url) {
   try {
     const u = new URL(url);
-    return `${u.protocol}//${u.host}/*`;
+    // Chrome match patterns must not include a port; use the hostname only.
+    // A pattern like "http://localhost/*" matches the host on any port.
+    return `${u.protocol}//${u.hostname}/*`;
   } catch {
     return null;
   }

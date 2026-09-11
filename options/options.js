@@ -48,6 +48,23 @@ function send(type, data) {
   });
 }
 
+// Ensure the extension holds host permission for the backend origin. Without
+// it, the service worker's fetch is a normal cross-origin request and CORS
+// blocks it. Chrome match patterns exclude the port, so any port on the host
+// is covered. Must be called from a user gesture (click handler).
+async function ensureHostPermission(url) {
+  const pattern = originPatternFor(url);
+  if (!pattern) return { ok: false, error: 'Invalid backend URL.' };
+  try {
+    const granted = await chrome.permissions.request({ origins: [pattern] });
+    return granted
+      ? { ok: true }
+      : { ok: false, error: `Host access to ${pattern} was denied. The extension cannot reach the backend without it.` };
+  } catch (e) {
+    return { ok: false, error: `Could not request host permission (${pattern}): ${e.message}` };
+  }
+}
+
 async function onSave() {
   const url = normalizeBaseUrl(backendUrl.value);
   const key = apiKey.value.trim();
@@ -55,19 +72,8 @@ async function onSave() {
   if (!key) return setStatus('err', 'API key is required.');
 
   // Request host permission for the configured origin (needs a user gesture).
-  const pattern = originPatternFor(url);
-  if (pattern) {
-    try {
-      const granted = await chrome.permissions.request({ origins: [pattern] });
-      if (!granted) {
-        setStatus('err', `Permission to access ${pattern} was denied. The extension cannot call the backend without it.`);
-        return;
-      }
-    } catch (e) {
-      setStatus('err', `Could not request host permission: ${e.message}`);
-      return;
-    }
-  }
+  const perm = await ensureHostPermission(url);
+  if (!perm.ok) return setStatus('err', perm.error);
 
   await saveSettings({
     backendUrl: url,
@@ -87,6 +93,11 @@ async function onTest() {
   const url = normalizeBaseUrl(backendUrl.value);
   const key = apiKey.value.trim();
   if (!url || !key) return setStatus('err', 'Enter the backend URL and API key first.');
+
+  // Testing hits the backend from the service worker, which needs host access.
+  const perm = await ensureHostPermission(url);
+  if (!perm.ok) return setStatus('err', perm.error);
+
   await saveSettings({ backendUrl: url, apiKey: key });
 
   const resp = await send('testConnection');
