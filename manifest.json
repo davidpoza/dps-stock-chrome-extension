@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "DPS Stock — AliExpress Inventory Capture",
+  "version": "0.1.0",
+  "description": "Add items from your AliExpress orders to DPS Stock inventory as Tools or Parts, in one click.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.aliexpress.com/*",
+    "https://*.aliexpress-media.com/*"
+  ],
+  "optional_host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "options_page": "options/options.html",
+  "action": {
+    "default_title": "DPS Stock Inventory Capture",
+    "default_popup": "options/options.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.aliexpress.com/p/order/*"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/main.js",
+        "content/dialog.js",
+        "content/toast.js",
+        "stores/aliexpress.js",
+        "shared/price.js"
+      ],
+      "matches": ["https://www.aliexpress.com/*"]
+    }
+  ]
+}

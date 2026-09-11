@@ -1,0 +1,10 @@
+{
+  "name": "dps-stock-chrome-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome MV3 extension to capture AliExpress order items into DPS Stock inventory.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
