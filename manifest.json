@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DPS Stock — AliExpress Inventory Capture",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Add items from your AliExpress orders to DPS Stock inventory as Tools or Parts, in one click.",
   "permissions": ["storage"],
   "host_permissions": [
