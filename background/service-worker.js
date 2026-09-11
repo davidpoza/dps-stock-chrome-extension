@@ -105,7 +105,7 @@ async function createPart(data) {
 
   await attachPhoto(client, item.id, data.imageUrl, warnings);
 
-  const supplierName = data.supplierName || 'AliExpress';
+  const supplierName = data.supplierName || storeLabel(data.store);
   if (data.link || data.supplierName) {
     try {
       await client.createSupplier({ description: supplierName, link: data.link || '', itemId: item.id });
@@ -156,6 +156,15 @@ function filenameFor(url, mime) {
     base = path.substring(path.lastIndexOf('/') + 1).replace(/\.[^.]+$/, '') || 'photo';
   } catch { /* keep default */ }
   return `${base}.${ext}`;
+}
+
+// Human-readable supplier label derived from the captured store id, used only
+// as a fallback when the adapter did not capture a specific seller name.
+function storeLabel(store) {
+  const known = { aliexpress: 'AliExpress', amazon: 'Amazon' };
+  if (known[store]) return known[store];
+  if (!store) return 'Supplier';
+  return String(store).charAt(0).toUpperCase() + String(store).slice(1);
 }
 
 function failure(e) {

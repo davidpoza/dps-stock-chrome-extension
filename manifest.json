@@ -1,12 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "DPS Stock — AliExpress Inventory Capture",
-  "version": "0.1.1",
-  "description": "Add items from your AliExpress orders to DPS Stock inventory as Tools or Parts, in one click.",
+  "name": "DPS Stock — Order Inventory Capture",
+  "version": "0.1.2",
+  "description": "Add items from your AliExpress and Amazon orders to DPS Stock inventory as Tools or Parts, in one click.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.aliexpress.com/*",
-    "https://*.aliexpress-media.com/*"
+    "https://*.aliexpress-media.com/*",
+    "https://www.amazon.es/*",
+    "https://m.media-amazon.com/*",
+    "https://images-eu.ssl-images-amazon.com/*",
+    "https://images-na.ssl-images-amazon.com/*"
   ],
   "optional_host_permissions": ["*://*/*"],
   "background": {
@@ -23,6 +27,11 @@
       "matches": ["https://www.aliexpress.com/p/order/*"],
       "js": ["content/content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.amazon.es/*"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
@@ -32,9 +41,21 @@
         "content/dialog.js",
         "content/toast.js",
         "stores/aliexpress.js",
+        "stores/amazon.js",
         "shared/price.js"
       ],
       "matches": ["https://www.aliexpress.com/*"]
+    },
+    {
+      "resources": [
+        "content/main.js",
+        "content/dialog.js",
+        "content/toast.js",
+        "stores/aliexpress.js",
+        "stores/amazon.js",
+        "shared/price.js"
+      ],
+      "matches": ["https://www.amazon.es/*"]
     }
   ]
 }

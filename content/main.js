@@ -3,10 +3,11 @@
 // rendering, and orchestrates capture -> confirm -> save.
 
 import { aliexpressAdapter } from '../stores/aliexpress.js';
+import { amazonAdapter } from '../stores/amazon.js';
 import { openDialog } from './dialog.js';
 import { showToast } from './toast.js';
 
-const ADAPTERS = [aliexpressAdapter];
+const ADAPTERS = [aliexpressAdapter, amazonAdapter];
 const MARK = 'data-dps-injected';
 
 let activeAdapter = null;
@@ -69,7 +70,8 @@ function observe() {
     for (const m of mutations) {
       for (const node of m.addedNodes) {
         if (node.nodeType !== 1) continue;
-        if (node.matches && node.matches('.order-item')) injectCard(node);
+        // Re-scan any added subtree through the active adapter's findCards so
+        // dynamically rendered cards get buttons regardless of store markup.
         if (node.querySelectorAll) injectAll(node);
       }
     }

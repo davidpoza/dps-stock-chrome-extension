@@ -1,14 +1,24 @@
-# DPS Stock — AliExpress Inventory Capture (Chrome extension)
+# DPS Stock — Order Inventory Capture (Chrome extension)
 
 A Manifest V3 Chrome extension that adds **"Add Tool to Inventory"** and
-**"Add Part to Inventory"** buttons to each order card on the AliExpress orders
-page (`https://www.aliexpress.com/p/order/index.html`). It scrapes the product
-description, photo, link, store name, price, and reference, lets you review them
-in a confirmation dialog, and creates the item in your
-[DPS Stock backend](../dps-stock-backend) via its REST API.
+**"Add Part to Inventory"** buttons to each ordered product on your **AliExpress**
+and **Amazon** order pages. It scrapes the product description, photo, link,
+seller name, price, and reference, lets you review them in a confirmation dialog,
+and creates the item in your [DPS Stock backend](../dps-stock-backend) via its
+REST API.
 
-AliExpress is the only supported store for now; the code is structured around a
-`StoreAdapter` so other stores (e.g. Amazon) can be added later.
+Supported pages:
+
+- **AliExpress** — the orders page (`https://www.aliexpress.com/p/order/index.html`).
+- **Amazon (`amazon.es`)** — the order-history / your-orders list
+  (`.../gp/css/order-history`, `.../your-orders/orders`) and the order-details
+  page (`.../your-orders/order-details`). The list page does **not** expose a
+  per-item price or seller, so those fields are left blank for you to fill in the
+  dialog (or capture that item from its order-details page instead).
+
+The code is structured around a `StoreAdapter`, so each store's selectors live in
+one module (`stores/aliexpress.js`, `stores/amazon.js`) and further stores or
+Amazon marketplaces can be added later.
 
 ## Requirements
 
@@ -34,8 +44,11 @@ AliExpress is the only supported store for now; the code is structured around a
 
 ## Usage
 
-1. Go to `https://www.aliexpress.com/p/order/index.html`.
-2. Each order shows two buttons. Click **Add Tool** or **Add Part**.
+1. Go to an order page:
+   - AliExpress: `https://www.aliexpress.com/p/order/index.html`.
+   - Amazon: your `amazon.es` order-history / your-orders list or an
+     order-details page.
+2. Each ordered product shows two buttons. Click **Add Tool** or **Add Part**.
 3. Review/edit the pre-filled fields and click **Save to DPS Stock**.
    - **Tool** → creates a tool-capable item (using the default Tool template)
      and attaches the photo.
@@ -55,7 +68,8 @@ AliExpress is the only supported store for now; the code is structured around a
 - **Options page** (`options/`) stores settings in `chrome.storage.local`,
   requests host permission for the backend, tests the connection, and lists
   templates.
-- **Store adapter** (`stores/aliexpress.js`) holds all AliExpress selectors.
+- **Store adapters** (`stores/aliexpress.js`, `stores/amazon.js`) hold each
+  store's selectors and extraction logic behind a common interface.
 - **Shared** (`shared/`) — settings, REST client, and price parsing.
 
 ## Project layout
@@ -68,6 +82,7 @@ content/main.js                # injection, observer, capture orchestration
 content/dialog.js              # Shadow-DOM confirmation dialog
 content/toast.js               # Shadow-DOM notifications
 stores/aliexpress.js           # AliExpress StoreAdapter (selectors + extract)
+stores/amazon.js               # Amazon StoreAdapter (list + order-details)
 options/options.html/js        # settings UI
 shared/settings.js             # chrome.storage.local wrapper
 shared/api.js                  # REST client + typed ApiError
@@ -104,7 +119,9 @@ providing the tag. The tag must match the manifest version (e.g. tag `v0.1.0`
 
 - Settings live in `chrome.storage.local` and are not encrypted at rest; keep
   this for personal/self-hosted use.
-- Scraping depends on AliExpress markup; if a field can't be read it is left
-  empty rather than failing, and you can fix it in the dialog before saving.
+- Scraping depends on AliExpress / Amazon markup; if a field can't be read it is
+  left empty rather than failing, and you can fix it in the dialog before saving.
+- Amazon support is scoped to `amazon.es`; the Amazon order-history list has no
+  per-item price or seller (add them in the dialog).
 - The order quantity is not written to stock in this version.
 ```
