@@ -1,0 +1,82 @@
+name: Release
+
+# Publishes the packaged extension to GitHub Releases.
+# Trigger by pushing a version tag (must match manifest.json version):
+#   git tag v0.1.0 && git push origin v0.1.0
+# Or run manually from the Actions tab (workflow_dispatch) giving the tag.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag to release (e.g. v0.1.0). Must match manifest.json version.'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tests
+        run: npm test
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify manifest version matches tag
+        run: |
+          MANIFEST_VERSION="$(node -p "require('./manifest.json').version")"
+          EXPECTED="${{ steps.ver.outputs.version }}"
+          if [ "$MANIFEST_VERSION" != "$EXPECTED" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match release tag ($EXPECTED). Bump manifest.json before tagging."
+            exit 1
+          fi
+          echo "manifest.json version $MANIFEST_VERSION matches tag."
+
+      - name: Build extension zip
+        run: |
+          ZIP="dps-stock-extension-${{ steps.ver.outputs.tag }}.zip"
+          zip -r -q "$ZIP" manifest.json background content options shared stores -x '*.test.js'
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+          echo "Built $ZIP:"
+          unzip -l "$ZIP"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: ${{ env.ZIP }}
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.ver.outputs.tag }}" >/dev/null 2>&1; then
+            gh release upload "${{ steps.ver.outputs.tag }}" "$ZIP" --clobber
+          else
+            gh release create "${{ steps.ver.outputs.tag }}" "$ZIP" \
+              --title "${{ steps.ver.outputs.tag }}" \
+              --generate-notes
+          fi

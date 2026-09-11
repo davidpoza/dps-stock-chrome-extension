@@ -82,6 +82,24 @@ Price parsing has unit tests (Node's built-in runner, no dependencies):
 npm test
 ```
 
+## Releases
+
+A GitHub Actions workflow (`.github/workflows/release.yml`) packages the
+extension and publishes it to GitHub Releases. It runs the tests, verifies that
+`manifest.json`'s `version` matches the tag, zips the runtime files (excluding
+tests), and attaches `dps-stock-extension-<tag>.zip` to the release.
+
+To cut a release, bump `version` in `manifest.json`, then tag and push:
+
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+You can also trigger it manually from the **Actions** tab (workflow_dispatch),
+providing the tag. The tag must match the manifest version (e.g. tag `v0.1.0`
+→ manifest `0.1.0`), or the workflow fails with a clear message.
+
 ## Notes & limitations
 
 - Settings live in `chrome.storage.local` and are not encrypted at rest; keep
